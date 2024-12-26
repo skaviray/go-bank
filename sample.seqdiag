@@ -1,0 +1,8 @@
+title Sequence of events for Ipam
+
+participant Services
+participant ipam
+
+Services->ipam: allocate-ip(POST)
+Services<--ipam: {"id": 146,...,"address": "172.16.0.11/32"...}
+Services->ipam: deAllocateIp(DELETE)

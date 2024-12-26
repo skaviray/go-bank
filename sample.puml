@@ -1,0 +1,33 @@
+@startuml sample
+actor Client
+participant "NetBox Service" as NetBox
+database Database
+
+== Allocate IP (POST) ==
+Client -> NetBox: POST /api/ipam/ip-ranges/<ip-range-id>/available-ips/ 
+activate NetBox
+NetBox -> Database: Query for available IP
+activate Database
+Database --> NetBox: Available IP (e.g., 192.168.1.10)
+deactivate Database
+NetBox -> Database: Insert allocated IP with ip-range-id
+activate Database
+Database --> NetBox: Insert confirmation
+deactivate Database
+NetBox --> Client: Response 201 Created (IP: 192.168.1.10, id: 10)
+deactivate NetBox
+
+== Deallocate IP (DELETE) ==
+Client -> NetBox: DELETE /api/ipam/ip-addresses/<id>/
+activate NetBox
+NetBox -> Database: Query to find IP for service_id
+activate Database
+Database --> NetBox: Allocated IP (e.g., 192.168.1.10)
+deactivate Database
+NetBox -> Database: Remove allocation (service_id, IP)
+activate Database
+Database --> NetBox: Deletion confirmation
+deactivate Database
+NetBox --> Client: Response 204 No Content (deallocated)
+deactivate NetBox
+@enduml

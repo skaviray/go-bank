@@ -1,0 +1,69 @@
+@startuml
+actor Client
+participant "f5-api Service" as F5API
+participant "Kafka Messaging Queue" as Kafka
+participant "f5-scheduler" as F5Scheduler
+participant "NetBox Service" as NetBox
+participant "F5 rSeries Box" as RSeries
+participant "Tenant" as Tenant
+database "Database" as DB
+
+== GET Request Flow ==
+Client -> F5API: HTTP GET
+activate F5API
+F5API -> DB: Query data
+DB --> F5API: Return data
+F5API -> Client: HTTP Response (data)
+deactivate F5API
+
+== POST/DELETE Request Flow ==
+Client -> F5API: HTTP POST/DELETE
+activate F5API
+F5API -> Kafka: Publish request to topic(f5-tenant-create)
+deactivate F5API
+
+Kafka -> F5Scheduler: Consume request from topic(f5-tenant-create)
+activate F5Scheduler
+
+F5Scheduler -> RSeries: Create Tenant (POST)
+activate RSeries
+RSeries --> F5Scheduler: Tenant creation/deletion confirmation
+deactivate RSeries
+
+F5Scheduler -> NetBox: POST /api/ipam/ip-ranges/<ip-range-id>/available-ips/ (allocate self-ips)
+activate NetBox
+NetBox --> F5Scheduler: 201 Created
+deactivate NetBox
+F5Scheduler -> Tenant: Do
+activate Tenant
+Tenant --> F5Scheduler: Response
+deactivate Tenant
+
+F5Scheduler -> Kafka: Publish completion message
+deactivate F5Scheduler
+
+Kafka -> F5API: Consume completion message
+activate F5API
+F5API -> Client: HTTP Response (success/failure)
+deactivate F5API
+
+== DELETE Request Flow ==
+Client -> F5API: HTTP DELETE
+activate F5API
+F5API -> Kafka: Publish request to topic(f5-tenant-create)
+deactivate F5API
+Kafka <- F5Scheduler: Consume request from topic(f5-tenant-create)
+activate F5Scheduler
+F5Scheduler -> RSeries: DELETE request
+activate RSeries
+RSeries --> F5Scheduler: 201 No Content
+deactivate RSeries
+F5Scheduler -> NetBox: DELETE request
+activate NetBox
+NetBox --> F5Scheduler: Response
+deactivate NetBox
+F5Scheduler -> Kafka: Publish completion message
+deactivate F5Scheduler
+
+
+@enduml
