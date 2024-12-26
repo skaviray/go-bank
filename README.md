@@ -15,3 +15,7 @@ rm -rf ~/simple-bank/postgres
 docker exec -it simple-bank-db-1  createdb --username=root --owner=root simple_bank
 docker exec -it simple-bank-db-1  dropdb simple_bank
 ```
+
+```test
+
+```
