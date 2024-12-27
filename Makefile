@@ -2,6 +2,9 @@
 postgres-setup:
 	docker-compose up -d
 
+postgres-start:
+	docker-compose start
+
 postgres-destroy:
 	docker-compose stop
 	docker-compose rm -f
@@ -28,4 +31,7 @@ test:
 console:
 	docker exec -it simple-bank-db-1 psql -U root -d simple_bank
 
-.PHONY: createdb dropdb postgres-destroy postgres-setup migrate-up migrate-down sqlc test
+start-server:
+	go run main.go
+
+.PHONY: createdb dropdb postgres-destroy postgres-setup migrate-up migrate-down sqlc test start-server
