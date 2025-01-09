@@ -24,7 +24,7 @@ type Payload struct {
 // 	jwt.RegisteredClaims
 // }
 
-func NewClaim(username string, duration time.Duration) (*Payload, error) {
+func NewPayload(username string, duration time.Duration) (*Payload, error) {
 	uuid, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
@@ -35,4 +35,11 @@ func NewClaim(username string, duration time.Duration) (*Payload, error) {
 		ExpiresAt: time.Now().Add(duration),
 		Username:  username,
 	}, nil
+}
+
+func (payload *Payload) Valid() error {
+	if time.Now().After(payload.ExpiresAt) {
+		return ErrTokenExpired
+	}
+	return nil
 }

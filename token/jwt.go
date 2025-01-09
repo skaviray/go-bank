@@ -26,7 +26,7 @@ func NewJwtMaker(sectetKey string) (Maker, error) {
 }
 
 func (maker *JWTMaker) CreateToken(username string, duration time.Duration) (string, error) {
-	payload, err := NewClaim(username, duration)
+	payload, err := NewPayload(username, duration)
 	if err != nil {
 		return "", err
 	}
