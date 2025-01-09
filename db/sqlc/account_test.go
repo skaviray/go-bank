@@ -12,8 +12,9 @@ import (
 )
 
 func createRandomAccount(t *testing.T) Account {
+	user := CreateRandomUser(t)
 	arg := CreateAccountParams{
-		Owner:    utils.RandomOwner(),
+		Owner:    user.Username,
 		Balance:  utils.RandomMoney(),
 		Currency: utils.RandomCurrency(),
 	}
@@ -23,13 +24,15 @@ func createRandomAccount(t *testing.T) Account {
 	require.Equal(t, arg.Owner, account.Owner)
 	require.Equal(t, arg.Balance, arg.Balance)
 	require.Equal(t, arg.Currency, account.Currency)
+	require.Equal(t, user.Username, account.Owner)
 	require.NotZero(t, account.ID)
 	require.NotZero(t, account.CreatedAt)
 	return account
 }
 func TestCreateAccount(t *testing.T) {
+	user := CreateRandomUser(t)
 	arg := CreateAccountParams{
-		Owner:    utils.RandomOwner(),
+		Owner:    user.Username,
 		Balance:  utils.RandomMoney(),
 		Currency: utils.RandomCurrency(),
 	}
@@ -39,6 +42,7 @@ func TestCreateAccount(t *testing.T) {
 	require.Equal(t, arg.Owner, account.Owner)
 	require.Equal(t, arg.Balance, arg.Balance)
 	require.Equal(t, arg.Currency, account.Currency)
+	require.Equal(t, user.Username, account.Owner)
 	require.NotZero(t, account.ID)
 	require.NotZero(t, account.CreatedAt)
 

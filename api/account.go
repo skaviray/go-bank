@@ -2,11 +2,13 @@ package api
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	db "simple-bank/db/sqlc"
 	"simple-bank/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 )
 
 type CreateAccountParams struct {
@@ -26,6 +28,9 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 	}
 	account, err := server.store.CreateAccount(ctx, args)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			log.Println(pqErr.Code.Name())
+		}
 		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 		return
 	}
@@ -49,11 +54,12 @@ func (server *Server) GetAccount(ctx *gin.Context) {
 			ctx.JSON(http.StatusNotFound, utils.ErrorResponse(err))
 			return
 		} else {
-			ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
+			ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(err))
 			return
 		}
 
 	}
+	// account = db.Account{}
 	ctx.JSON(http.StatusOK, account)
 }
 

@@ -11,8 +11,8 @@ LIMIT 1;
 -- name: ListTransfers :many
 SELECT * FROM transfers
 WHERE
-   from_account $1 OR
-   to_account $2
+   from_account = $1 OR
+   to_account = $2
 ORDER BY id
 LIMIT $3
 OFFSET $4;

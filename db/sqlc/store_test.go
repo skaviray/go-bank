@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func executeTransaction(store *Store, txName string, transferArgs TransferTXParams, results chan TransferTXResponse, errs chan error) {
+func executeTransaction(store Store, txName string, transferArgs TransferTXParams, results chan TransferTXResponse, errs chan error) {
 	ctx := context.WithValue(context.Background(), TxKey("txname"), txName)
 	transferResponse, err := store.TransferTX(ctx, transferArgs)
 	errs <- err
@@ -47,11 +47,11 @@ func TestCreateTXN(t *testing.T) {
 		require.Equal(t, int64(10), transfer.Amount)
 		require.NotZero(t, transfer.ID)
 		require.NotZero(t, transfer.CreatedAt)
-		_, err = store.Queries.GetTransfer(context.Background(), transfer.ID)
+		_, err = store.GetTransfer(context.Background(), transfer.ID)
 		require.NoError(t, err)
 
 		// Check from entry
-		fromEntry, err := store.Queries.GetEntry(context.Background(), result.FromEntry.ID)
+		fromEntry, err := store.GetEntry(context.Background(), result.FromEntry.ID)
 		require.NoError(t, err)
 		require.NotEmpty(t, fromEntry)
 		require.Equal(t, from_account.ID, fromEntry.AccountID)
@@ -60,7 +60,7 @@ func TestCreateTXN(t *testing.T) {
 		require.NotZero(t, fromEntry.CreatedAt)
 
 		// Check from entry
-		toEntry, err := store.Queries.GetEntry(context.Background(), result.ToEntry.ID)
+		toEntry, err := store.GetEntry(context.Background(), result.ToEntry.ID)
 		require.NoError(t, err)
 		require.NotEmpty(t, toEntry)
 		require.Equal(t, to_account.ID, toEntry.AccountID)

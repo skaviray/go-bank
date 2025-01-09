@@ -11,10 +11,10 @@ postgres-destroy:
 	rm -rf ~/simple-bank/postgres
 
 createdb:
-	docker exec -it simple-bank-db-1  createdb --username=root --owner=root simple_bank
+	docker exec -it go-bank-db-1  createdb --username=root --owner=root simple_bank
 
 dropdb:
-	docker exec -it simple-bank-db-1  dropdb simple_bank
+	docker exec -it go-bank-db-1  dropdb simple_bank
 
 migrate-up:
 	migrate -path db/migration -database "postgresql://root:admin@localhost:5433/simple_bank?sslmode=disable" -verbose up
@@ -29,9 +29,12 @@ test:
 	go test -v -cover ./...
 
 console:
-	docker exec -it simple-bank-db-1 psql -U root -d simple_bank
+	docker exec -it go-bank-db-1 psql -U root -d simple_bank
 
 start-server:
 	go run main.go
 
-.PHONY: createdb dropdb postgres-destroy postgres-setup migrate-up migrate-down sqlc test start-server
+mock:
+	mockgen -destination db/mock/store.go -package mockdb  simple-bank/db/sqlc Store 
+
+.PHONY: createdb dropdb postgres-destroy postgres-setup migrate-up migrate-down sqlc test start-server mock

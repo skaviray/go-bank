@@ -1,3 +1,5 @@
+![alt text](simple-bank.png)
+
 - Database Migration
   
 ```bash
@@ -16,6 +18,11 @@ docker exec -it simple-bank-db-1  createdb --username=root --owner=root simple_b
 docker exec -it simple-bank-db-1  dropdb simple_bank
 ```
 
-```test
-
+- Mock testing
+  
+```bash
+go install github.com/golang/mock/mockgen@v1.6.0
+export PATH=$PATH:$(go env GOPATH)/bin
 ```
+
+

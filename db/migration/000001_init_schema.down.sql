@@ -1,3 +1,3 @@
-DROP TABLE Transfers;
-DROP TABLE Entries;
-DROP TABLE Accounts;
+DROP TABLE transfers;
+DROP TABLE entries;
+DROP TABLE accounts;
