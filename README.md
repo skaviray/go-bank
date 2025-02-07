@@ -1,4 +1,11 @@
+# Bank Application using golang
+
+## Database architecture
+
 ![alt text](simple-bank.png)
+
+
+## Install packages required for the development
 
 - Database Migration
   
@@ -6,23 +13,28 @@
 brew install golang-migrate
 brew install sqlc
 migrate create --ext sql -dir db/migration -seq init_schema
-```
-
-```bash
-docker-compose up -d
-docker logs simple-bank-db-1  -f
-docker-compose stop
-docker-compose rm -f
-rm -rf ~/simple-bank/postgres
-docker exec -it simple-bank-db-1  createdb --username=root --owner=root simple_bank
-docker exec -it simple-bank-db-1  dropdb simple_bank
-```
-
-- Mock testing
-  
-```bash
 go install github.com/golang/mock/mockgen@v1.6.0
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
 
+## Database setup
 
+- setup Database
+  
+```bash
+make postgres-setup
+make postgres-start
+make createdb
+```
+
+- Destroying database
+
+```bash
+make postgres-destroy
+```
+
+## Starting the service
+
+```bash
+make start-server
+```
