@@ -96,7 +96,7 @@ func TestGetAccountApi(t *testing.T) {
 			defer ctrl.Finish()
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
-			server := New(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 			url := fmt.Sprintf("/accounts/%d", tc.accountId)
 			request, err := http.NewRequest(http.MethodGet, url, nil)
@@ -104,7 +104,6 @@ func TestGetAccountApi(t *testing.T) {
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(t, recorder)
 		})
-
 	}
 }
 
@@ -113,7 +112,7 @@ func TestGetAccountApi(t *testing.T) {
 
 // 	ctrl := gomock.NewController(t)
 // 	store := mockdb.NewMockStore(ctrl)
-// 	server := New(store)
+// 	server := newTestServer(t, store)
 // 	args := db.CreateAccountParams{
 // 		Owner:    account.Owner,
 // 		Balance:  account.Balance,
@@ -123,5 +122,5 @@ func TestGetAccountApi(t *testing.T) {
 
 // 	url := fmt.Sprint("/accounts")
 // 	body, err := json.Marshal(args)
-// 	http.NewRequest(http.MethodGet, url, )
+// 	http.NewRequest(http.MethodGet, url)
 // }

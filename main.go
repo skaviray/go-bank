@@ -20,7 +20,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot connect to db %e", err)
 	}
+	log.Println("successfully connected to database..")
 	store := db.NewStore(conn)
-	server := api.New(store)
+	server, err := api.New(store, config)
+	if err != nil {
+		log.Println(err)
+	}
 	server.Start(config.ListenAddress)
 }
