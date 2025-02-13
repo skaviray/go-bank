@@ -2,9 +2,11 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	db "simple-bank/db/sqlc"
+	"simple-bank/token"
 	"simple-bank/utils"
 
 	"github.com/gin-gonic/gin"
@@ -17,23 +19,23 @@ type CreateTransferParams struct {
 	Currency    string `json:"currency" binding:"required,currency"`
 }
 
-func (server *Server) validateCurrency(ctx *gin.Context, accountid int64, currency string) bool {
+func (server *Server) validateCurrency(ctx *gin.Context, accountid int64, currency string) (db.Account, bool) {
 	account, err := server.store.GetAccount(ctx, accountid)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, utils.ErrorResponse(err))
-			return false
+			return account, false
 		} else {
 			ctx.JSON(http.StatusNotFound, utils.ErrorResponse(err))
-			return false
+			return account, false
 		}
 	}
 	if account.Currency != currency {
 		err := fmt.Errorf("account [%d] curency mismatch: %s vs %s", accountid, account.Currency, currency)
 		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
-		return false
+		return account, false
 	}
-	return true
+	return account, true
 }
 func (server *Server) CreateTransfer(ctx *gin.Context) {
 	var transfer CreateTransferParams
@@ -41,10 +43,18 @@ func (server *Server) CreateTransfer(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
 		return
 	}
-	if !server.validateCurrency(ctx, transfer.FromAccount, transfer.Currency) {
+	fromAccount, valid := server.validateCurrency(ctx, transfer.FromAccount, transfer.Currency)
+	if !valid {
 		return
 	}
-	if !server.validateCurrency(ctx, transfer.ToAccount, transfer.Currency) {
+	payload := ctx.MustGet(authorizationPayloadKey).(token.Payload)
+	if payload.Username != fromAccount.Owner {
+		err := errors.New("from account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
+		return
+	}
+	_, valid = server.validateCurrency(ctx, transfer.ToAccount, transfer.Currency)
+	if !valid {
 		return
 	}
 	args := db.TransferTXParams{

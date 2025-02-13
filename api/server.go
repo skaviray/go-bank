@@ -39,14 +39,16 @@ func (server *Server) setupRouter() {
 	router.POST("/users", server.CreateUser)
 	router.GET("/users", server.GetUser)
 	router.POST("/users/login", server.LoginUser)
-	router.POST("/accounts", server.CreateAccount)
-	router.GET("/accounts", server.ListAccounts)
-	router.GET("/accounts/:id", server.GetAccount)
-	router.PATCH("/accounts/:id", server.UpdateAccount)
-	router.DELETE("/accounts/:id", server.DeleteAccount)
-	router.POST("/transfers", server.CreateTransfer)
-	router.GET("/transfers/:id", server.GetTransfer)
-	router.GET("/transfers", server.ListTransfers)
+
+	addRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
+	addRoutes.POST("/accounts", server.CreateAccount)
+	addRoutes.GET("/accounts", server.ListAccounts)
+	addRoutes.GET("/accounts/:id", server.GetAccount)
+	addRoutes.PATCH("/accounts/:id", server.UpdateAccount)
+	addRoutes.DELETE("/accounts/:id", server.DeleteAccount)
+	addRoutes.POST("/transfers", server.CreateTransfer)
+	addRoutes.GET("/transfers/:id", server.GetTransfer)
+	addRoutes.GET("/transfers", server.ListTransfers)
 	server.router = router
 }
 

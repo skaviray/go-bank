@@ -2,9 +2,13 @@ package api
 
 import (
 	"database/sql"
+	"errors"
+
+	// "go/token"
 	"log"
 	"net/http"
 	db "simple-bank/db/sqlc"
+	"simple-bank/token"
 	"simple-bank/utils"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +16,7 @@ import (
 )
 
 type CreateAccountParams struct {
-	Owner    string `json:"owner" binding:"required"`
+	// Owner    string `json:"owner" binding:"required"`
 	Currency string `json:"currency" binding:"required,oneof=USD EUR INR"`
 }
 
@@ -22,8 +26,9 @@ func (server *Server) CreateAccount(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
 		return
 	}
+	payload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	args := db.CreateAccountParams{
-		Owner:    params.Owner,
+		Owner:    payload.Username,
 		Currency: params.Currency,
 	}
 	account, err := server.store.CreateAccount(ctx, args)
@@ -59,6 +64,12 @@ func (server *Server) GetAccount(ctx *gin.Context) {
 		}
 
 	}
+	payload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if account.Owner != payload.Username {
+		err := errors.New("account doesnt belong to authenticated user")
+		ctx.JSON(http.StatusUnauthorized, utils.ErrorResponse(err))
+		return
+	}
 	// account = db.Account{}
 	ctx.JSON(http.StatusOK, account)
 }
@@ -74,7 +85,9 @@ func (server *Server) ListAccounts(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, utils.ErrorResponse(err))
 		return
 	}
+	payload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	args := db.ListAccountsParams{
+		Owner:  payload.Username,
 		Limit:  params.PageSize,
 		Offset: (params.PageId - 1) * params.PageSize,
 	}
