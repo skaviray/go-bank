@@ -88,7 +88,7 @@ func (server *Server) ListAccounts(ctx *gin.Context) {
 	payload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 	args := db.ListAccountsParams{
 		Owner:  payload.Username,
-		Limit:  params.PageSize,
+		Limit:  params.PageSize, 
 		Offset: (params.PageId - 1) * params.PageSize,
 	}
 	accounts, err := server.store.ListAccounts(ctx, args)

@@ -29,6 +29,20 @@ func randomAccount(owner string) db.Account {
 
 }
 
+// func addAuthorization(
+// 	t *testing.T,
+// 	request *http.Request,
+// 	tokenMaker token.Maker,
+// 	authType string,
+// 	username string,
+// 	duration time.Duration,
+// ) {
+// 	token, err := tokenMaker.CreateToken(username, duration)
+// 	require.NoError(t, err)
+// 	authorizationHeader := fmt.Sprintf("%s %s", authType, token)
+// 	request.Header.Add(authorizationHeaderKey, authorizationHeader)
+// }
+
 func requireBodyMatchAccount(t *testing.T, body *bytes.Buffer, account db.Account) {
 
 	data, err := io.ReadAll(body)
@@ -126,7 +140,7 @@ func TestGetAccountApi(t *testing.T) {
 
 func TestCreateAccountApi(t *testing.T) {
 	user := randomUser(t)
-	tc := []struct {
+	testCases := []struct {
 		name          string
 		buildStubs    func(store *mockdb.MockStore)
 		setupAuth     func(t *testing.T, request *http.Request, tokenMaker token.Maker)
@@ -135,29 +149,43 @@ func TestCreateAccountApi(t *testing.T) {
 		{
 			name: "OK",
 			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().CreateAccount(gomock.Any(),)
+				store.EXPECT().CreateAccount(gomock.Any(), CreateAccountParams{
+					Currency: utils.RandomCurrency(),
+				}).Times(1).Return(db.Account{}, nil)
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user.Username, time.Minute)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+
 			},
 		},
 	}
-	ctrl := gomock.NewController(t)
-	store := mockdb.NewMockStore(ctrl)
-	server := newTestServer(t, store)
-	args := db.CreateAccountParams{
-		Owner:    user.Username,
-		Balance:  utils.RandomMoney(),
-		Currency: utils.RandomCurrency(),
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			store := mockdb.NewMockStore(ctrl)
+			server := newTestServer(t, store)
+			url := "/accounts"
+			args := db.CreateAccountParams{
+				Owner:    user.Username,
+				Balance:  utils.RandomMoney(),
+				Currency: utils.RandomCurrency(),
+			}
+			body, err := json.Marshal(args)
+			require.NoError(t, err)
+			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+			request.Header.Set("Content-Type", "application/json")
+			recorder := httptest.NewRecorder()
+			tc.setupAuth(t, request, server.tokenMaker)
+			require.NoError(t, err)
+			server.router.ServeHTTP(recorder, request)
+			require.Equal(t, http.StatusOK, recorder.Code)
+		})
 	}
-	store.EXPECT().CreateAccount(gomock.Any(), gomock.Eq(args)).Times(1).Return(db.Account{}, nil)
 
-	url := "/accounts"
-	body, err := json.Marshal(args)
-	require.NoError(t, err)
-	request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
-	request.Header.Set("Content-Type", "application/json")
-	recorder := httptest.NewRecorder()
-	require.NoError(t, err)
-	server.router.ServeHTTP(recorder, request)
-	require.Equal(t, http.StatusOK, recorder.Code)
+	// store.EXPECT().CreateAccount(gomock.Any(), gomock.Eq(args)).Times(1).Return(db.Account{}, nil)
 
 	// data, err := io.ReadAll(recorder.Body)
 
